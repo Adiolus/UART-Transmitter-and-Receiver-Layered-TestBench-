@@ -2,8 +2,6 @@
 
 A complete, self-checking **SystemVerilog** project containing synthesizable UART transmitter/receiver RTL and a **class-based, non-UVM layered verification environment**.
 
-Repository: [Adiolus/UART-Transmitter-and-Receiver-Layered-TestBench-](https://github.com/Adiolus/UART-Transmitter-and-Receiver-Layered-TestBench-)
-
 ## Features
 
 - Full-duplex UART: TX and RX operate independently and are tested concurrently.
