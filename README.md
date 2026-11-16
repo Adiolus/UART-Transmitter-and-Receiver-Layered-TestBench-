@@ -135,23 +135,3 @@ actual_baud = clock_frequency / CLKS_PER_BIT
 Choose the nearest appropriate integer divider for your clock and desired baud rate, and check the resulting baud error against your peer's tolerance. The RTL accepts dividers of at least 4; the supplied verification configuration validates **16 only**. Hardware use requires timing/CDC review and verification at your actual divider.
 
 The default testbench has a 100 MHz clock (10 ns period) and divider 16, giving a fast simulation baud rate of 6.25 Mbaud. This is a simulation setting, not a claim about a particular board or physical serial link. `tb/uart_pkg.sv` defines `CPB` and `BIT_TIME`; if you change the clock period, update `BIT_TIME` to match. The full regression must be rerun after timing changes.
-
-## Push this project to your GitHub repository
-
-The folder name deliberately includes the final hyphen to match the repository in the screenshot. After extracting the ZIP into Downloads on your Mac, run:
-
-```bash
-cd ~/Downloads/UART-Transmitter-and-Receiver-Layered-TestBench-
-git init
-git add .
-git commit -m "Add UART TX RX RTL and layered SystemVerilog testbench"
-git branch -M main
-git remote add origin https://github.com/Adiolus/UART-Transmitter-and-Receiver-Layered-TestBench-.git
-git push -u origin main
-```
-
-These commands assume the remote is still empty, as shown in the screenshot. Adjust the `cd` path if you extracted elsewhere. Authenticate with your GitHub account when requested. If Git asks for identity, configure your own `user.name` and `user.email` before committing. If the remote has acquired commits, fetch and reconcile them instead of force-pushing.
-
-## Scope
-
-This is an educational UART RTL and verification project. It does not include parity, configurable word/stop lengths, FIFOs, flow control, a CPU bus, FPGA pin constraints, or a physical RS-232 voltage interface. No synthesis, hardware timing, metastability, or silicon signoff is claimed. See the test plan for further boundaries.
