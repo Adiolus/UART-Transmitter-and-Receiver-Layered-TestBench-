@@ -1,0 +1,12 @@
+build/
+obj_dir/
+work/
+transcript
+vsim.wlf
+modelsim.ini
+*.vcd
+*.fst
+*.log
+.DS_Store
+.venv/
+__pycache__/
