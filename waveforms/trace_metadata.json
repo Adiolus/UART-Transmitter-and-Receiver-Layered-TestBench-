@@ -1,0 +1,25 @@
+{
+  "vcd_sha256": "3b4e90ac952d54cee6995a6d785140acc16e97d5c8710d178d438c8d59d60508",
+  "time_unit": "ns",
+  "bit_time_ns": 160,
+  "figures": [
+    {
+      "file": "tx_55.png",
+      "frame_start_ns": 7755.0,
+      "decoded_byte": "0x55",
+      "event_ns": 9355.0
+    },
+    {
+      "file": "rx_55.png",
+      "frame_start_ns": 7680.0,
+      "decoded_byte": "0x55",
+      "event_ns": 9225.0
+    },
+    {
+      "file": "rx_framing_error.png",
+      "frame_start_ns": 420480.0,
+      "decoded_byte": "0x3A",
+      "event_ns": 422025.0
+    }
+  ]
+}

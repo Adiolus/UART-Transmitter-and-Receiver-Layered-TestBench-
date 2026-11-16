@@ -1,6 +1,14 @@
 # UART Transmitter and Receiver — Layered Testbench
 
-A complete, self-checking **SystemVerilog** project containing synthesizable UART transmitter/receiver RTL and a **class-based, non-UVM layered verification environment**.
+**NAME : ADITYA CHINCHORE**  
+**SECTION : 5A**  
+**SUBJECT : VERIFICATION OF DIGITAL SYSTEMS**
+
+## Objective
+
+Design an 8N1 UART transmitter and receiver and verify their operation using a SystemVerilog layered testbench. Validate serial framing, byte integrity, concurrent transmission and reception, reset behavior, and error detection using independent monitors, scoreboards, assertions, and directed/random stimulus.
+
+A self-checking **SystemVerilog** project containing synthesizable UART transmitter/receiver RTL and a **class-based, non-UVM layered verification environment**.
 
 ## Features
 
@@ -10,7 +18,7 @@ A complete, self-checking **SystemVerilog** project containing synthesizable UAR
 - TX busy and one-cycle done signals; RX valid and framing-error pulses.
 - Transactions, generator, driver, passive monitors, scoreboard, and environment classes communicating through typed mailboxes and a virtual interface.
 - Directed patterns, exhaustive byte sweeps, reproducible random traffic, back-to-back RX frames, error injection, reset interruption, false-start rejection, and requests while TX is busy.
-- Assertions, byte-coverage counters, watchdog timeout, optional VCD waveforms, and GitHub Actions regression.
+- Assertions, byte-coverage counters, watchdog timeout, optional VCD waveforms, and local multi-seed regression.
 
 ## Project contents
 
@@ -28,13 +36,9 @@ A complete, self-checking **SystemVerilog** project containing synthesizable UAR
 | `tb/uart_environment.svh` | Component construction and concurrent execution |
 | `tb/uart_pkg.sv` | Class compilation order and simulation timing |
 | `tb/tb_uart.sv` | Clock, reset, directed checks, assertions and test entry point |
-| `sim/files.f` | Ordered source file list |
-| `sim/run_questa.do` | Optional Questa batch script |
+| `waveforms/plot_waveforms.py` | Render recorded VCD transitions as waveform figures |
+| `waveforms/` | TX, RX and framing-error figures with reproduction notes |
 | `Makefile` | Build, test, regression, wave and cleanup targets |
-| `docs/TEST_PLAN.md` | Verification matrix and limitations |
-| `docs/VALIDATION.md` | Actual local validation results |
-| `docs/validation.txt` | Captured simulation output |
-| `.github/workflows/simulation.yml` | Automated regression after push/PR |
 
 ## Layered architecture
 
@@ -52,11 +56,35 @@ flowchart TD
   S --> R[Checks and byte coverage]
 ```
 
-The TX scoreboard compares requested bytes against bytes decoded from the **serial TX pin**. The RX scoreboard compares independently driven serial frames against the DUT's **parallel data and error outputs**. TX is deliberately not wired to RX: a shared TX/RX bug should not cancel out in a loopback-only test.
+The TX scoreboard compares requested bytes against bytes decoded from the **serial TX pin**. The RX scoreboard compares independently driven serial frames against the DUT's **parallel data and error outputs**. Independent TX and RX stimulus allows each direction to be checked against its own expected results.
+
+## Simulation waveforms
+
+These figures are rendered from **actual VCD transitions** recorded during a passing Verilator simulation (`SEED=42`, `N_RANDOM=0`). They show a 100 MHz clock configuration with 16 clocks per bit: each serial bit lasts 160 ns. The time axes use the original simulation timestamps. These are simulation plots, not hardware measurements.
+
+### Transmitter: 0x55
+
+The frame contains a low start bit, data bits `1, 0, 1, 0, 1, 0, 1, 0` (LSB first), and a high stop bit. `tx_busy` spans the ten-bit frame; `tx_done` pulses for one clock after the stop bit. The second `tx_start` pulse is deliberately applied while busy and is ignored.
+
+![Recorded TX waveform for byte 0x55](waveforms/tx_55.png)
+
+### Receiver: 0x55
+
+The independently driven RX frame decodes to `0x55`. `rx_data` updates with a one-clock `rx_valid` pulse after the stop-bit sample; `rx_error` stays low. The byte before this frame is `0xFF`.
+
+![Recorded RX waveform for byte 0x55](waveforms/rx_55.png)
+
+### Receiver: invalid stop bit
+
+This injected frame carries `0x3A` but has a low stop bit. The receiver asserts `rx_error`, leaves `rx_valid` low, and retains the previous good byte (`0xFF`). This confirms that the malformed frame is rejected.
+
+![Recorded RX waveform with framing error](waveforms/rx_framing_error.png)
+
+See [waveform reproduction notes](waveforms/README.md) for commands and trace metadata.
 
 ## Run with Verilator
 
-Run every command from the project root. A modern Verilator with SystemVerilog classes, mailboxes, timing and assertion support is required, together with GNU Make and a C++ compiler. The tested Linux setup used Python 3.12, the `verilator==5.48.0` wheel and a C++20-capable compiler. The bundled simulator reports Verilator 5.49; the package version and runtime banner differ. The CI workflow pins this same package. Older distribution-provided Verilator versions may lack required class support.
+Run every command from the project root. A modern Verilator with SystemVerilog classes, mailboxes, timing and assertion support is required, together with GNU Make and a C++ compiler. The tested Linux setup used Python 3.12, the `verilator==5.48.0` wheel and a C++20-capable compiler. The bundled simulator reports Verilator 5.49; the package version and runtime banner differ. Older distribution-provided Verilator versions may lack required class support.
 
 If a suitable `verilator` executable is already on PATH:
 
@@ -78,7 +106,7 @@ make regression VERILATOR=verilator-cli
 make waves VERILATOR=verilator-cli
 ```
 
-On macOS, use a native Verilator installation with the required features and `make test`, or run the supplied GitHub Actions workflow on Linux after pushing. The Python wheel path above was validated on Linux, not macOS.
+On macOS, use a native Verilator installation with the required features and `make test`. The Python wheel path above was validated on Linux, not macOS.
 
 `SEED` controls simulation randomization. `N_RANDOM` adds that many random bytes **per direction**, in addition to the fixed directed/exhaustive suite; accepted range is 0–10000. Each regression runs seeds 1, 7, 42, and 2026. A failure uses `$fatal` and returns a nonzero status. A 250 ms simulation watchdog catches hangs.
 
@@ -94,14 +122,6 @@ PASS: TX frame duration and done count=360
 The 376 RX events comprise 360 valid bytes and 16 framing errors. Coverage here means explicit per-byte functional counters, **not** code coverage or a simulator covergroup database.
 
 `make waves` writes `build/uart.vcd`. Open it with a VCD-capable viewer; inspect `tb_uart.bus` signals. `make clean` removes generated build output. VCD files and compiled objects are excluded from Git.
-
-### Optional Questa flow
-
-```bash
-vsim -c -do sim/run_questa.do
-```
-
-This script is supplied for convenience and was not executed locally. A license with full SystemVerilog class support is needed. The Verilator regression is the validated flow. Icarus Verilog is not the target simulator for this class-based testbench.
 
 ## UART interface contract
 
@@ -135,3 +155,11 @@ actual_baud = clock_frequency / CLKS_PER_BIT
 Choose the nearest appropriate integer divider for your clock and desired baud rate, and check the resulting baud error against your peer's tolerance. The RTL accepts dividers of at least 4; the supplied verification configuration validates **16 only**. Hardware use requires timing/CDC review and verification at your actual divider.
 
 The default testbench has a 100 MHz clock (10 ns period) and divider 16, giving a fast simulation baud rate of 6.25 Mbaud. This is a simulation setting, not a claim about a particular board or physical serial link. `tb/uart_pkg.sv` defines `CPB` and `BIT_TIME`; if you change the clock period, update `BIT_TIME` to match. The full regression must be rerun after timing changes.
+
+
+
+## Validation and limitations
+
+The [GitHub Actions regression](https://github.com/Adiolus/UART-Transmitter-and-Receiver-Layered-TestBench-/actions/runs/43874947980) passed four seeds on commit `8138aa7`. Each run checked 360 transmitted frames, 360 successfully received bytes, and 16 expected framing errors. That run is historical evidence; the workflow has since been removed. Run `make regression` to reproduce the four-seed checks locally. The fresh waveform run passed 260 TX frames, 276 RX events and 256/256 byte bins per direction; see its [captured output](waveforms/simulation.txt).
+
+This project uses a class-based, non-UVM testbench. Its coverage counters measure all 256 byte values in each direction; they are not code coverage or SystemVerilog covergroups. Verification uses divider 16 and matching peer baud rates. Parity, FIFOs, flow control, baud mismatch, physical hardware operation, and synthesis/timing signoff are outside the demonstrated scope.

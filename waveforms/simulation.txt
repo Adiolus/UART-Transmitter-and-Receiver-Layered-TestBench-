@@ -1,0 +1,9 @@
+./build/obj/Vtb_uart +verilator+seed+42 +N_RANDOM=0 +WAVES
+PASS: reset interruption and false-start rejection
+PASS: TX=260 RX=276 framing_errors=16
+Byte coverage: TX=256/256 RX=256/256
+PASS: TX frame duration and done count=260
+- tb/tb_uart.sv:72: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.49
+- Verilator: $finish at 453us; walltime 0.072 s; speed 6.284 ms/s
+- Verilator: cpu 0.072 s on 1 threads; allocated 6 MB
