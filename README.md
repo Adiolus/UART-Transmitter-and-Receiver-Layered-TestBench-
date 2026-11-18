@@ -1,6 +1,7 @@
 # UART Transmitter and Receiver — Layered Testbench
 
 **NAME : ADITYA CHINCHORE**  
+**SRN : PES2UG24EC006**  
 **SECTION : 5A**  
 **SUBJECT : VERIFICATION OF DIGITAL SYSTEMS**
 
