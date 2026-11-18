@@ -83,47 +83,6 @@ This injected frame carries `0x3A` but has a low stop bit. The receiver asserts 
 
 See [waveform reproduction notes](waveforms/README.md) for commands and trace metadata.
 
-## Run with Verilator
-
-Run every command from the project root. A modern Verilator with SystemVerilog classes, mailboxes, timing and assertion support is required, together with GNU Make and a C++ compiler. The tested Linux setup used Python 3.12, the `verilator==5.48.0` wheel and a C++20-capable compiler. The bundled simulator reports Verilator 5.49; the package version and runtime banner differ. Older distribution-provided Verilator versions may lack required class support.
-
-If a suitable `verilator` executable is already on PATH:
-
-```bash
-make test
-make regression
-make test SEED=42 N_RANDOM=500
-make waves
-```
-
-For the tested Python package setup on Linux:
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install verilator==5.48.0
-make test VERILATOR=verilator-cli
-make regression VERILATOR=verilator-cli
-make waves VERILATOR=verilator-cli
-```
-
-On macOS, use a native Verilator installation with the required features and `make test`. The Python wheel path above was validated on Linux, not macOS.
-
-`SEED` controls simulation randomization. `N_RANDOM` adds that many random bytes **per direction**, in addition to the fixed directed/exhaustive suite; accepted range is 0–10000. Each regression runs seeds 1, 7, 42, and 2026. A failure uses `$fatal` and returns a nonzero status. A 250 ms simulation watchdog catches hangs.
-
-Expected default summary:
-
-```text
-PASS: reset interruption and false-start rejection
-PASS: TX=360 RX=376 framing_errors=16
-Byte coverage: TX=256/256 RX=256/256
-PASS: TX frame duration and done count=360
-```
-
-The 376 RX events comprise 360 valid bytes and 16 framing errors. Coverage here means explicit per-byte functional counters, **not** code coverage or a simulator covergroup database.
-
-`make waves` writes `build/uart.vcd`. Open it with a VCD-capable viewer; inspect `tb_uart.bus` signals. `make clean` removes generated build output. VCD files and compiled objects are excluded from Git.
-
 ## UART interface contract
 
 All inputs except serial RX are synchronous to `clk`. Reset is active low and asynchronously clears both blocks. Integrate reset deassertion appropriately for the target hardware.
